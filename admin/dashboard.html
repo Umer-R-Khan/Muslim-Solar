@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Dashboard | Al-Muslim Solar &amp; Electric Solutions</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/webp" href="../images/favicon.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+
+<!-- Shown briefly while we confirm the user is a signed-in admin -->
+<div id="auth-checking" style="min-height:100vh; display:flex; align-items:center; justify-content:center; color:var(--muted);">
+  Checking access…
+</div>
+
+<div class="admin-shell" id="admin-shell" style="display:none;">
+  <aside class="admin-sidebar" id="admin-sidebar">
+    <div class="admin-brand">
+      <div><img src="../images/logo-light.svg" alt="Al Muslim" class="admin-logo" width="117" height="46"><small style="display:block;margin-top:4px;color:#8FA0A2;font-size:.66rem;letter-spacing:.08em;">ADMIN PORTAL</small></div>
+    </div>
+    <ul class="admin-nav">
+      <li><button type="button" class="tab-btn active" data-tab="items">Manage Items <span class="badge" id="items-count">0</span></button></li>
+      <li><button type="button" class="tab-btn" data-tab="quotebuilder">Create A Quote <span class="badge" id="quotebuilder-count">0</span></button></li>
+      <li><button type="button" class="tab-btn" data-tab="quotes">Quote Requests <span class="badge" id="quotes-count">0</span></button></li>
+    </ul>
+    <div class="admin-user">
+      <div class="email" id="admin-email">—</div>
+      <button id="logout-btn" class="btn btn-outline btn-block" style="border-color:rgba(255,255,255,0.3); color:#F2EFE7;">Log Out</button>
+      <a href="../index.html" class="back-link" style="display:block; margin-top:12px;">← View website</a>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <button class="nav-toggle sidebar-toggle-btn" id="sidebar-toggle" aria-label="Toggle menu"><span></span></button>
+      <h1 id="panel-title">Manage Items</h1>
+    </div>
+
+    <div class="admin-content">
+
+      <!-- ===== ITEMS PANEL ===== -->
+      <section id="panel-items">
+        <div class="toolbar">
+          <p style="margin:0; color:var(--muted); font-size:.9rem;">Your store catalog. Choose a Category for each item so it is easy to find — everything else (name, price, unit, photo, description) is typed by you. These items can be added to any invoice or quote with one click.</p>
+          <button id="add-item-btn" class="btn btn-primary">+ Add Item</button>
+        </div>
+        <div class="filter-bar">
+          <select id="items-cat-filter" aria-label="Filter by category"><option value="">All categories</option></select>
+          <input type="search" id="items-search" placeholder="Search items by name or description…" autocomplete="off">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Item</th><th>Category</th><th>Price</th><th>Description</th><th>Actions</th></tr></thead>
+            <tbody id="items-tbody">
+              <tr class="loading-row"><td colspan="5">Loading items…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== CREATE A QUOTE PANEL ===== -->
+      <section id="panel-quotebuilder" style="display:none;">
+        <div class="toolbar">
+          <p style="margin:0; color:var(--muted); font-size:.9rem;">Create, edit and re-save colorful PDF invoices &amp; quotes in a popup. Everything is typed by you — only Category is a dropdown. Every document is saved to your database.</p>
+          <button id="inv-open-btn" class="btn btn-primary">＋ New Invoice / Quote</button>
+        </div>
+        <h3 style="margin: 22px 0 12px;">Saved Invoices &amp; Quotes</h3>
+        <div class="filter-bar">
+          <select id="sv-type" aria-label="Filter by type"><option value="">All types</option><option value="Invoice">Invoices</option><option value="Quote">Quotes</option></select>
+          <input type="search" id="sv-search" placeholder="Search by number, customer or phone…" autocomplete="off">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Number</th><th>Type</th><th>Customer</th><th>Total</th><th>Balance</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="qb-saved-tbody">
+              <tr class="loading-row"><td colspan="7">Loading saved invoices &amp; quotes…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== QUOTES PANEL (leads) ===== -->
+      <section id="panel-quotes" style="display:none;">
+        <div class="toolbar">
+          <p style="margin:0; color:var(--muted); font-size:.9rem;">Submissions from the public "Get A Quote" form.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Contact</th><th>Phone</th><th>Service</th><th>System / Battery</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="quotes-tbody">
+              <tr class="loading-row"><td colspan="7">Loading quote requests…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- ===== Add/Edit Item Modal ===== -->
+<div class="modal-backdrop" id="item-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="item-modal-title">Add Item</h2>
+      <button class="modal-close" id="item-modal-close" aria-label="Close">×</button>
+    </div>
+    <form id="item-form">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div>
+            <label for="itm-name">Name *</label>
+            <input type="text" id="itm-name" name="name" required placeholder="e.g. 550W Monocrystalline Solar Panel">
+          </div>
+          <div class="form-row">
+            <div>
+              <label for="itm-category">Category</label>
+              <select id="itm-category" name="category">
+                <option>Solar Panel</option><option>Inverter</option><option>Battery</option><option>AC Unit</option>
+                <option>Electrical Material</option><option>Labor / Installation</option><option>Other</option>
+              </select>
+            </div>
+            <div>
+              <label for="itm-price">Price (PKR) *</label>
+              <input type="number" id="itm-price" name="price" min="0" step="1" required placeholder="e.g. 32000">
+            </div>
+          </div>
+          <div>
+            <label for="itm-unit">Unit <span style="font-weight:400; color:var(--muted);">(optional)</span></label>
+            <input type="text" id="itm-unit" name="unit" placeholder="e.g. per panel, per unit, per meter">
+          </div>
+          <div>
+            <label for="itm-image">Image URL <span style="font-weight:400; color:var(--muted);">(optional)</span></label>
+            <input type="text" id="itm-image" name="imageUrl" placeholder="Paste an image link, or upload below">
+            <input type="file" id="itm-image-file" accept="image/*" style="margin-top:8px;">
+            <img id="itm-image-preview" alt="" style="display:none;margin-top:8px;max-height:90px;border-radius:8px;border:1px solid var(--line);">
+          </div>
+          <div>
+            <label for="itm-description">Description <span style="font-weight:400; color:var(--muted);">(optional)</span></label>
+            <textarea id="itm-description" name="description" placeholder="Specs, brand, wattage, capacity, etc."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" id="item-cancel">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="item-save-btn">Save Item</button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- ===== Quote Detail Modal ===== -->
+<div class="modal-backdrop" id="quote-detail-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Quote Request Details</h2>
+      <button class="modal-close" id="quote-detail-close" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body" id="quote-detail-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script src="../js/main.js"></script>
+<script src="../js/admin-auth.js"></script>
+<script src="../js/admin-items.js"></script>
+<script src="../js/invoice-pdf.js"></script>
+<script src="../js/invoice-popup.js"></script>
+<script src="../js/admin-quotes.js"></script>
+<script>
+  // ---- Auth guard: runs before anything else in the dashboard is shown ----
+  auth.onAuthStateChanged((user) => {
+    if (!user) {
+      window.location.href = "login.html";
+      return;
+    }
+    verifyAdminInFirestore(user).then((ok) => {
+      if (!ok) {
+        signOutAdmin().then(() => (window.location.href = "login.html"));
+        return;
+      }
+      document.getElementById("admin-email").textContent = user.email;
+      document.getElementById("auth-checking").style.display = "none";
+      document.getElementById("admin-shell").style.display = "flex";
+      initItemsTab();
+      initQuoteBuilderTab();
+      initQuotesTab();
+    });
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", () => {
+    signOutAdmin().then(() => (window.location.href = "login.html"));
+  });
+
+  // ---- Tab switching ----
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  const panels = {
+    items: document.getElementById("panel-items"),
+    quotebuilder: document.getElementById("panel-quotebuilder"),
+    quotes: document.getElementById("panel-quotes"),
+  };
+  const titles = {
+    items: "Manage Items",
+    quotebuilder: "Create A Quote",
+    quotes: "Quote Requests",
+  };
+  tabButtons.forEach((btn) =>
+    btn.addEventListener("click", () => {
+      tabButtons.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      Object.keys(panels).forEach((key) => (panels[key].style.display = key === btn.dataset.tab ? "block" : "none"));
+      document.getElementById("panel-title").textContent = titles[btn.dataset.tab];
+      document.getElementById("admin-sidebar").classList.remove("open");
+    })
+  );
+
+  // ---- Mobile sidebar toggle ----
+  document.getElementById("sidebar-toggle").addEventListener("click", () => {
+    document.getElementById("admin-sidebar").classList.toggle("open");
+  });
+
+  // ---- Toast helper ----
+  let toastTimer = null;
+  function showToast(text, isError = false) {
+    const el = document.getElementById("toast");
+    el.textContent = text;
+    el.className = `toast show ${isError ? "error" : ""}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("show"), 3200);
+  }
+</script>
+</body>
+</html>
